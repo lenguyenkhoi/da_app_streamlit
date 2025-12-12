@@ -57,38 +57,44 @@ if file is not None:
          # Lưu vào session_state
         st.session_state.cleaned_data = cleaned
         st.success("Missing values handled!")
-        #Dữ liệu sau khi làm sạch
+
+    # Dữ liệu sau khi làm sạch
+    final_data = st.session_state.cleaned_data if st.session_state.cleaned_data is not None else data
+    
     if st.button("The data after cleaning"):
         if st.session_state.cleaned_data is not None:
-            st.dataframe(st.session_state.cleaned_data.head(10))
+            # data = st.session_state.cleaned_data
+            st.dataframe(final_data.head(10))
             with st.expander("Dataset Overview"):
                 st.subheader("Detailed Dataset Description")
-                st.write(st.session_state.cleaned_data.describe())
+                st.write(final_data.describe())
                 st.subheader("Data Type")
-                st.write(st.session_state.cleaned_data.dtypes)
+                st.write(final_data.dtypes)
                 st.subheader("Null Data")
-                st.write(st.session_state.cleaned_data.isnull().sum())
+                st.write(final_data.isnull().sum())
         else:
             st.warning("The data has not been processed yet! Please click 'Handling missing values' first.")
-    
+
+    # Data Aggregation and Summarization Options
     st.subheader("Data Aggregation and Summarization Options") 
     category_col = st.selectbox("Select a categorical column for summary generation:", categorical_columns, key="category") 
     numeric_col = st.selectbox("Select a numerical column for analysis:", numerical_columns, key="numeric") 
+    
     aggregation_function = st.selectbox(
         "Aggregation function:", 
         ["sum", "mean", "count", "min", "max"]
     )
     
     if aggregation_function == "sum": 
-        aggregated_data = data.groupby(category_col)[numeric_col].sum().reset_index() 
+        aggregated_data = final_data.groupby(category_col)[numeric_col].sum().reset_index() 
     elif aggregation_function =="mean":
-        aggregated_data = data.groupby(category_col)[numeric_col].mean().reset_index()
+        aggregated_data = final_data.groupby(category_col)[numeric_col].mean().reset_index()
     elif aggregation_function =="count":
-        aggregated_data = data.groupby(category_col)[numeric_col].count().reset_index()
+        aggregated_data = final_data.groupby(category_col)[numeric_col].count().reset_index()
     elif aggregation_function =="min":
-        aggregated_data = data.groupby(category_col)[numeric_col].min().reset_index()
+        aggregated_data = final_data.groupby(category_col)[numeric_col].min().reset_index()
     elif aggregation_function =="max":
-        aggregated_data = data.groupby(category_col)[numeric_col].max().reset_index()
+        aggregated_data = final_data.groupby(category_col)[numeric_col].max().reset_index()
     
     st.dataframe(aggregated_data)
     
@@ -117,14 +123,14 @@ if file is not None:
     for i, report in enumerate(st.session_state.reports):
         filename = report["chart_path"] 
         if filename.endswith(('.png', '.jpg', '.jpeg')):
-            file_path = os.path.join(chart_folder_path, filename) 
-            
-            image = Image.open(file_path) 
-            st.image(image, caption=filename, use_column_width=True) 
-    
+            try: 
+                image = Image.open(filename) 
+                st.image(image, caption=os.path.basename(filename), use_column_width=True) 
+            except:
+                st.error(f"Could not load image: {filename}")
     
     if st.button("Generate Report"):
-        generate_excel_report(data, st.session_state.reports, "report")
+        generate_excel_report(final_data, st.session_state.reports, "report")
         with open("report.xlsx", "rb") as file:
             excel_data = file.read()
         st.download_button(label="Download", data=excel_data, file_name="report.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
