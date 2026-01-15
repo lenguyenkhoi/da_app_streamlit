@@ -2,6 +2,9 @@
 An interactive data analytics web application built with Streamlit.
 It allows users to upload CSV files, explore data, preprocess datasets, generate visualizations, and receive AI-powered insights.
 The app also supports exporting a complete Excel report with charts and automated AI analysis.
+---
+App: https://data-analyst-app.streamlit.app
+---
 ## 🚀 Features
 ### 📁 Upload & Data Preview
 - Upload CSV files through drag-and-drop
